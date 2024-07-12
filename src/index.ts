@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser";
 
 import dotenv from "dotenv";
 
-// import routes from "./routes";
+import routes from "./routes";
 
 const app = express();
 const port = 3000;
@@ -25,10 +25,10 @@ app.use(
   })
 );
 
-// app.use(routes);
+app.use(routes);
 
 try {
-  mongoose.connect("mongodb://localhost:27017/LazyDiet").then(() => {
+  mongoose.connect("mongodb://localhost:27017/FitBFF").then(() => {
     console.log("established connection to mongodb");
   });
 } catch (error) {
