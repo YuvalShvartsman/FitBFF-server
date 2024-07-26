@@ -39,7 +39,7 @@ export const googleSignIn = async (req: GoogleSignInRequest, res: Response) => {
       );
     }
 
-    res.status(200).json({ success: true });
+    res.status(200).json(user);
   } catch (error) {
     res.status(401).json({ error: "unable to connect to the server" });
   }
