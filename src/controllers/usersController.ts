@@ -6,32 +6,46 @@ import { OAuth2Client } from "google-auth-library";
 
 import * as dotenv from "dotenv";
 
-dotenv.config();
+import jwt from "jsonwebtoken";
 
-interface GoogleSignInRequest extends Request {
-  body: {
-    token: string;
-  };
-}
+dotenv.config();
 
 const client = new OAuth2Client(process.env.googleId);
 
-async function Verify(idToken) {
+async function Verify(idToken: string) {
   const ticket = await client.verifyIdToken({
     idToken,
-    audience: process.env.googleId,
+    audience: process.env.GOOGLE_CLIENT_ID,
   });
   return ticket.getPayload();
 }
-export const googleSignIn = async (req: GoogleSignInRequest, res: Response) => {
+
+const secretKey = process.env.JWT_SECRET;
+
+const generateToken = (user: any) => {
+  return jwt.sign(
+    {
+      id: user.googleId,
+      email: user.email,
+      name: user.name,
+      picture: user.picture,
+    },
+    secretKey,
+    {
+      expiresIn: "1h",
+    }
+  );
+};
+
+export const googleSignIn = async (req: Request, res: Response) => {
   const { token } = req.body;
   try {
     const payload = await Verify(token);
     const { sub: googleId, email, name, picture } = payload;
-    const user = await Users.findOne({ googleId: googleId });
 
+    let user = await Users.findOne({ googleId });
     if (!user) {
-      const user = await Users.create({ googleId, email, name, picture });
+      user = await Users.create({ googleId, email, name, picture });
     } else {
       const user = await Users.updateOne(
         { googleId },
@@ -39,8 +53,9 @@ export const googleSignIn = async (req: GoogleSignInRequest, res: Response) => {
       );
     }
 
-    res.status(200).json(user);
+    const jwtToken = generateToken(user);
+    res.status(200).json({ token: jwtToken, user });
   } catch (error) {
-    res.status(401).json({ error: "unable to connect to the server" });
+    res.status(401).json({ error: "Unable to connect to the server" });
   }
 };
