@@ -25,7 +25,7 @@ const secretKey = process.env.JWT_SECRET;
 const generateToken = (user: any) => {
   return jwt.sign(
     {
-      id: user.googleId,
+      googleId: user.googleId,
       email: user.email,
       name: user.name,
       picture: user.picture,
