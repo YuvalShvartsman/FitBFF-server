@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 
 const client = new OAuth2Client(process.env.googleId);
+const secretKey = process.env.JWT_SECRET;
 
 async function Verify(idToken: string) {
   const ticket = await client.verifyIdToken({
@@ -19,8 +20,6 @@ async function Verify(idToken: string) {
   });
   return ticket.getPayload();
 }
-
-const secretKey = process.env.JWT_SECRET;
 
 const generateToken = (user: any) => {
   return jwt.sign(
@@ -54,6 +53,14 @@ export const googleSignIn = async (req: Request, res: Response) => {
     }
 
     const jwtToken = generateToken(user);
+
+    res.cookie("jwt", jwtToken, {
+      httpOnly: true,
+      secure: false, // when we make the app on https we need to change to true
+      sameSite: "strict",
+      expires: new Date(Date.now() + 3600000),
+    });
+
     res.status(200).json({ token: jwtToken, user });
   } catch (error) {
     res.status(401).json({ error: "Unable to connect to the server" });
